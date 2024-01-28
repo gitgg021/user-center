@@ -103,4 +103,118 @@ public class UserController {
     }
 
 
+    /**
+     * 查询用户
+     *
+     * @param searchRequest
+     * @return
+     */
+    @GetMapping("/search")
+    public BaseResponse<List<User>> searchUsers(UserSearchRequest searchRequest, HttpServletRequest request) {
+        // 管理员校验
+        if (!isAdmin(request)) {
+          throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+        String username = searchRequest.getUsername();
+        String userAccount = searchRequest.getUserAccount();
+        String gender = searchRequest.getGender();
+        String phone = searchRequest.getPhone();
+        String email = searchRequest.getEmail();
+        Integer userStatus = searchRequest.getUserStatus();
+        String userRole = searchRequest.getUserRole();
+        String planetCode = searchRequest.getPlanetCode();
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        Date updateTime = searchRequest.getUpdateTime();
+        Date createTime = searchRequest.getCreateTime();
+        // username
+        if (StringUtils.isNotBlank(username)) {
+            queryWrapper.like("username", username);
+        }
+        // userAccount
+        if (StringUtils.isNotBlank(userAccount)) {
+            queryWrapper.like("userAccount", userAccount);
+        }
+        // gender
+        if (StringUtils.isNotBlank(username)) {
+            queryWrapper.eq("gender", gender);
+        }
+        // phone
+        if (StringUtils.isNotBlank(phone)) {
+            queryWrapper.like("phone", phone);
+        }
+        // email
+        if (StringUtils.isNotBlank(email)) {
+            queryWrapper.like("email", email);
+        }
+        // userStatus
+        if (userStatus != null) {
+            queryWrapper.eq("userStatus", userStatus);
+        }
+
+        if (StringUtils.isNotBlank(userRole)) {
+            queryWrapper.eq("userRole", userRole);
+        }
+
+        if (StringUtils.isNotBlank(planetCode)) {
+            queryWrapper.eq("planetCode", planetCode);
+        }
+
+        if (updateTime != null) {
+            queryWrapper.like("updateTime", updateTime);
+        }
+        if (createTime != null) {
+            queryWrapper.like("createTime", createTime);
+        }
+        List<User> userList = userService.list(queryWrapper);
+        List<User> list = userList.stream().map(userService::getSafetyUser).collect(Collectors.toList());
+        return ResultUtils.success(list);
+    }
+
+    /**
+     * 删除用户
+     * @param id
+     * @param request
+     * @return
+     */
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteUsers(@RequestBody long id,HttpServletRequest request){
+       if(!isAdmin(request)){
+            return null;
+        }
+        if(id <= 0 ){
+            return null;
+        }
+        boolean b = userService.removeById(id);
+        return ResultUtils.success(b);
+    }
+
+    /**
+     * 用户登出
+     * @param request
+     * @return
+     */
+    @PostMapping("/logout")
+    public BaseResponse<Integer> userLogout( HttpServletRequest request) {
+        if (request == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        int result = userService.userLogout(request);
+        return ResultUtils.success(result);
+    }
+
+
+    /**
+     *是否为管理员
+     * @param request
+     * @return
+     */
+  public boolean isAdmin(HttpServletRequest request){
+        // 仅仅管理员可查询
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User user = (User) userObj;
+      return user != null && user.getUserRole() == ADMIN_ROLE;
+
+    }
+
+
 }
