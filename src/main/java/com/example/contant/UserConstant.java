@@ -4,11 +4,11 @@ package com.example.contant;
 /**
  * 用户登录
  *
- * @Author cao
+ * @Author caocao
  */
 public interface UserConstant {
     /**
-     * 用户登录态 键
+     * 用户登录态键
      */
     String USER_LOGIN_STATE  = "userLoginState";
 
